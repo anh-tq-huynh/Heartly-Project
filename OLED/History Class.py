@@ -19,6 +19,11 @@ class History():
         #latest_max_row=f"select measurement from history order by desc() limit 8 "
         self.latest_max_row = ["Measurement 1", "Measurement 2", "Measurement 3","Measurement 4", "Measurement 5"]
         return self.latest_max_row[:8]
+    
+#   def measurement_data(self,measurement_no):
+#       measurement_no= f"select * from history where latest_max_row.measurement_no= {self.measurement_no} "
+#       return self.measurement_no
+#
 
 history = History()
 measurements = history.measurements()
@@ -49,6 +54,7 @@ while True:
 
     current_button = encoder_button.value()
     if current_button == 0 and last_button == 1:
+        #selected_index=history.measurement_data
         now = time.ticks_ms()
         if time.ticks_diff(now, last_time) > 200:  # debounce
             oled.fill(0)
