@@ -32,7 +32,7 @@ class HRV_analysis:
             ppi = (self.peaks[i+1]-self.peaks[i])*4
             if ppi > 300 and ppi < 2000:
                 ppi_list.append(ppi)
-    return ppi_list
+        return ppi_list
 
 
     def meanPPI(self.data):
