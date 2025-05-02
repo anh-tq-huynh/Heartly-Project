@@ -5,6 +5,7 @@ from filefifo import Filefifo
 from machine import Timer
 
 from src.buffer import RoundRobin
+from src.calculations import HRVAnalysis
 
 import array
 import sys
@@ -13,13 +14,18 @@ import gc
 
 #### Constants
 
-FREQUENCY_HZ = 250
-WEIGHT_PARAM = 1/FREQUENCY_HZ
-BUFFER_SIZE = 100
-#THRESHOLD = 1500 # 1500 is an empirical threshold, needs to be verified in the device.
+DEBOUNCE_LIMIT = 3
+WEIGHT_PARAM = 1/250
 THRESHOLD_ON = 5000
 THRESHOLD_OFF = 10000
-MAX_HR_BUFFER_SIZE = 500
+
+##### Finger detection (FD)
+FD_FREQUENCY_HZ = 250
+FD_BUFFER_SIZE = 100
+
+##### Heartrate calculation (HB)
+HR_FREQUENCY_HZ = 1
+HR_BUFFER_SIZE = FD_FREQUENCY_HZ * 5
     
 # --- Live SOS filter class ---
 
@@ -43,11 +49,12 @@ class LiveSosFilter:
             x = y 
         return y
 
-# Check if Pin(26) or Pin(27)
+data = ADC(Pin(26)) # Check if Pin(26) or Pin(27)
 
-data = ADC(Pin(26))
-buffer = RoundRobin(BUFFER_SIZE)
-hr_data_buffer = []  # Store HR signal when finger detected
+fd_buffer = RoundRobin(FD_BUFFER_SIZE)
+hr_buffer = RoundRobin(HR_BUFFER_SIZE)
+
+hrv = HRVAnalysis()
 
 FINGER_ON = 1
 FINGER_OFF = 0
@@ -55,32 +62,21 @@ finger_state = FINGER_OFF
 
 #check the stability of the finger on the sensor to validate the state of the finger
 debounce_counter = 0
-DEBOUNCE_LIMIT = 3
+
 last_detected_finger = False
 
 #### Smooth average
 
 def calculate_smooth_average(buffer):
     smoothed = array.array('d', [0]*len(buffer))
-    for index in range(1, len(buffer)):
+    for index in range(0, len(buffer)):
         smoothed[index] = (1-WEIGHT_PARAM)*smoothed[index-1] + WEIGHT_PARAM*buffer[index]
     return smoothed
 
 #### Detect finger
 
-#def detect_finger(buffer):
-    # Avoid detection if buffer is not full
-    #if len(buffer) < BUFFER_SIZE:
-        #return False
-    
-    #smoothed = calculate_smooth_average(buffer)
-    #for sample in smoothed:
-        #if sample > THRESHOLD:
-            #return False
-    #return True
-
 def detect_finger(buffer):
-    if len(buffer) < BUFFER_SIZE:
+    if len(buffer) < FD_BUFFER_SIZE:
         return None
 
     smoothed = calculate_smooth_average(buffer)
@@ -93,55 +89,62 @@ def detect_finger(buffer):
     else:
         return None   # Stay in current state
 
+def hr_timer_callback(timer):
+    global fd_buffer, finger_state, debounce_counter, last_detected_finger, hr_buffer, sosfilter
 
+    print(f"Finger state: {finger_state}")
 
-def timer_callback(timer):
-    global buffer, finger_state, debounce_counter, last_detected_finger, hr_data_buffer, sosfilter
-    buffer.append(data.read_u16())
-    
-    if len(buffer) == BUFFER_SIZE:
-        samples = buffer.get()
-        detected_finger = detect_finger(samples)
-        
+    #store HR data when finger is on
+    if finger_state == FINGER_ON:
+        if len(hr_buffer) == HR_BUFFER_SIZE:
+            hr_samples = hr_buffer.get()
+            #hr_samples = calculate_smooth_average(hr_samples)
+            #hr_samples_filtered = array.array('f', [0] * len(hr_samples))
+            hr_samples_filtered = []
+            for hr_sample in hr_samples:
+                hr_samples_filtered.append(sosfilter.process(hr_sample))
+            
+            hrv.add_sample(hr_samples_filtered)
+            hrv.calculate_mean_HR()
+            print("Mean HR",hrv.meanHR_value)
+            
+        else:
+            print("Collecting samples (5s) ...")
+
+def fd_timer_callback(timer):
+    global fd_buffer, finger_state, debounce_counter, last_detected_finger, hr_buffer, sosfilter
+    raw_data = data.read_u16()    
+    fd_buffer.append(raw_data)
+
+    if finger_state == FINGER_ON:
+        hr_buffer.append(raw_data)
+
+    if len(fd_buffer) == FD_BUFFER_SIZE:
+        fd_samples = fd_buffer.get()
+        detected_finger = detect_finger(fd_samples)
+
         if detected_finger is None:
             detected_finger = last_detected_finger  # HOLD the last detection
-
-        print(f"detect_finger: {detected_finger}")
-        
+      
         if detected_finger and finger_state == FINGER_OFF:
             debounce_counter += 1
             if debounce_counter >= DEBOUNCE_LIMIT:
                 finger_state = FINGER_ON
                 debounce_counter = 0
-                print("Finger DETECTED!")
-                
+
         elif not detected_finger and finger_state == FINGER_ON:
             debounce_counter += 1
             if debounce_counter >= DEBOUNCE_LIMIT:
                 finger_state = FINGER_OFF
                 debounce_counter = 0
-                hr_data_buffer.clear()
+                hr_buffer.clear()
                 gc.collect() #collect garbage
-                print("Finger REMOVED!")
                 
         else:
             debounce_counter = 0
     
         last_detected_finger = detected_finger  # Update last known
-        buffer.clear()  # Clear buffer efficiently without reallocating
-    
-    #store HR data when finger is on
-    if finger_state == FINGER_ON and len(hr_data_buffer) < MAX_HR_BUFFER_SIZE:
-        value = data.read_u16()
-        filtered_value = sosfilter.process(value)
-        hr_data_buffer.append(filtered_value)
-
-        #storage check
-        if len(hr_data_buffer) % 500 == 0:
-            print(f"Stored {len(hr_data_buffer)} HR samples so far...")
-            
-        
-        #buffer = RoundRobin(BUFFER_SIZE)
+        fd_buffer.clear()  # Clear buffer efficiently without reallocating
 
 # --- SOS coefficients for your pulse filter ---
 sos = [
@@ -151,12 +154,14 @@ sos = [
 ]
 
 # --- Create the LiveSosFilter instance ---
-sosfilter = LiveSosFilter(sos, 5000)
-timer = Timer()
-timer.init(mode=Timer.PERIODIC, freq=FREQUENCY_HZ, callback=timer_callback)
+sosfilter = LiveSosFilter(sos, HR_BUFFER_SIZE)
+
+fd_timer = Timer()
+fd_timer.init(mode=Timer.PERIODIC, freq=FD_FREQUENCY_HZ, callback=fd_timer_callback)
+
+hr_timer = Timer()
+hr_timer.init(mode=Timer.PERIODIC, freq=HR_FREQUENCY_HZ, callback=hr_timer_callback)
 
 #keep main thread alive without wasting CPU
 while True:
     time.sleep(1)
-
-

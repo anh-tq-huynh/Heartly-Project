@@ -18,9 +18,6 @@ class HRVAnalysis:
         self.samples = []
         self.samples = data
 
-    
-        
-
     def find_peaks(self):
         self.peaks = []
         if len(self.samples) == 0:
@@ -150,12 +147,3 @@ class HRVAnalysis:
         if self.SDNN_value > 0 and self.SDSD_value > 0:
             sd2 = math.sqrt((2 * (self.SDNN_value * 2)) - (self.SDSD_value * 2 / 2))
         return round(sd2)
-data = Filefifo(10, name = "readings-30s-finger.txt")
-value_list = []
-for i in range (8000):
-    current_value = data.get()
-    value_list.append(current_value)
-hrv = HRVAnalysis()
-hrv.add_sample(value_list)
-hrv.calculate_mean_HR
-print(hrv.meanHR_value)
