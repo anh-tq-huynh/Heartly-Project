@@ -17,8 +17,8 @@ class RoundRobin:
     def append(self, item):
         """Append an unsigned integer to the buffer, overwriting oldest when full."""
         self.buffer[self.head] = item
-        self.head = (self.head + 1) % self.size
-
+        self.head = (self.head + 1) % self.size      
+        
         if self.is_full:
             self.tail = (self.tail + 1) % self.size
 
@@ -33,16 +33,17 @@ class RoundRobin:
             # buffer is empty
             return array(self.typecode, [])
 
-        length = len(self)
-        result = array(self.typecode, [0] * length)
+        result = array(self.typecode, [0] * self.size)
         idx = self.tail
-        for i in range(length):
+        for i in range(self.size):
             result[i] = self.buffer[idx]
             idx = (idx + 1) % self.size
+
         return result
 
     def clear(self):
         """Reset the buffer to empty."""
+        self.buffer = array(self.typecode, [0] * self.size)
         self.head = 0
         self.tail = 0
         self.is_full = False

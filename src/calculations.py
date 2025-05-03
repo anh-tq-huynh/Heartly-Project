@@ -1,149 +1,120 @@
 import math
 import time
-from filefifo import Filefifo
 
 class HRVAnalysis:
     def __init__(self):
-        self.samples = []
+        self.samples = None
         self.peaks = []
-        self.PPI = []
-        self.data = []
+        self.PPIs = []
         self.meanPPI_value = 0
+        self.meanHR_value = 0
         self.SDSD_value = 0
         self.SDNN_value = 0
-        self.meanHR_value = 0
-        self.RMSSD = 0
+        self.RMSSD_value = 0
         
     def add_sample(self, data):
-        self.samples = []
-        self.samples = data
+        self.samples = data #acumulate new samples
 
     def find_peaks(self):
-        self.peaks = []
-        if len(self.samples) == 0:
+        self.peaks.clear()
+        
+        if len(self.samples) < 2:
             print("Warning: No samples to process.")
             return self.peaks
         
-        else:
-            
-            #Find threshold
-            find_threshold = []
-            maximum = 0
-            minimum = 0
-            for value in self.samples[-250:]:
-                find_threshold.append(value)
-            maximum = max(find_threshold)
-            minimum = min(find_threshold)
-            print(maximum)
-            print(minimum)
-            threshold = (maximum + minimum)/2
-            print("threshold",threshold)
-            
-            #initiate needed variables
-            prev_value = 0
-            pass_threshold = True #to filter out the small peaks in between
-            
-            #Go through the sample
-            for i, value in enumerate(self.samples):
-                current_value = value
-                current_dif = current_value - prev_value
-                #Check direction: upward or downward
-                if current_dif > 0:
-                    upward = True
-                    #print("upwards")
-                if current_dif< 0:
-                    if upward:
-                        #print("downwards")
-                        if pass_threshold:
-                            upward = False
-                            pass_threshold = False
-                            #print("passed threshold")
-                            if current_value > threshold:
-                                peak_no = i+1
-                                self.peaks.append(peak_no)
-                if current_value < threshold:
-                    pass_threshold = True
-                prev_value = current_value
-            #print(self.peaks)
-            
+        # Finds the midpoint between the global max and min of the data.
+        threshold = (max(self.samples) + min(self.samples))/2
         
+        # Start with the first sample.
+        previous = self.samples[0]
         
+        # Tracks whether the signal has been rising (i.e. the last step was an “up”).
+        upward = False
+        # Prevents you from marking multiple peaks in one excursion above threshold. It only goes True again once you’ve dipped below the threshold.
+        passed = False
+        
+        for i in range(1, len(self.samples)):
+            current = self.samples[i]
+            if current - previous > 0:
+                # Going upwards.
+                upward = True
+            else:
+                # Going downwards.
+                if upward and passed and current > threshold:
+                    #record index of the peak
+                    self.peaks.append(i)
+                    passed = False
+                upward = False
+                
+            if current < threshold:
+                passed = True
+            previous = current
+            
+        return self.peaks
 
-    def calculate_ppi(self):
+    # Peak-to-peak interval (in ms)    
+    def calculate_ppi(self, sampling_interval_ms=4):
+        self.PPIs.clear()
         for i in range(len(self.peaks) - 1):
-            ppi = (self.peaks[i + 1] - self.peaks[i]) * 4  # Adjust based on sampling rate
+            ppi = (self.peaks[i + 1] - self.peaks[i]) * sampling_interval_ms  # Adjust based on sampling rate
             if 300 < ppi < 2000:  # Valid PPI range
-                self.PPI.append(ppi)
-            self.PPI.append(ppi)
-        self.data = self.PPI
-        return self.data
+                self.PPIs.append(ppi)
+        return self.PPIs
 
     def meanPPI(self):
-        if not self.PPI:
+        if not self.PPIs:
             print("Warning: PPI data is empty, returning 0 for meanPPI.")
             return 0
-        self.meanPPI_value = sum(self.PPI) / len(self.PPI)
+        self.meanPPI_value = sum(self.PPIs) / len(self.PPIs)
         return self.meanPPI_value
 
     def meanHR(self):
-        mean_ppi = self.meanPPI()
-        if mean_ppi == 0:
+        if self.meanPPI_value == 0:
             print("Warning: Cannot calculate HR, meanPPI is zero.")
             return 0
-        self.meanHR_value = 60000 / mean_ppi  # Convert PPI to HR
+        self.meanHR_value = 60000 / self.meanPPI_value  # Convert PPI to HR
+        return self.meanHR_value
+
+    # def SDNN(self):
+    #     if len(self.PPIs) < 2:
+    #         print("Warning: PPI data is empty, cannot calculate SDNN.")
+    #         return 0
+    #     mean_ppi = self.meanPPI()
+    #     variance = sum((x - mean_ppi) ** 2 for x in self.PPIs) / (len(self.PPIs) - 1)
+    #     self.SDNN_value = math.sqrt(variance)
+    #     return self.SDNN_value
     
+    # def RMSSD(self):
+    #     if len(self.PPIs) < 2:
+    #         print("Warning: Insufficient PPI data to calculate RMSSD.")
+    #         return 0
+    #     diffs = [(self.PPIs[i + 1] - self.PPIs[i]) for i in range(len(self.PPIs) - 1)]
+    #     self.RMSSD_value = math.sqrt(sum(diffs)/len(diffs))
+    #     return self.RMSSD_value
+                 
+    # def SDSD(self):
+    #     if len(self.PPIs) < 2:
+    #         print("Warning: Insufficient PPI data to calculate SDSD.")
+    #         return 0
+    #     diffs = [self.PPIs[i + 1] - self.PPIs[i] for i in range(len(self.PPIs) - 1)]
+    #     mean_diffs = sum(diffs) / len(diffs)
+    #     variance_diffs = sum((d - mean_diffs)**2 for d in diffs)/(len(diffs)-1)
+    #     self.SDSD_value = math.sqrt(variance_diffs)
+    #     return self.SDSD_value
+
+    # def SD1(self):
+    #     sd1 = math.sqrt(self.SDSD_value ** 2 / 2)
+    #     return sd1
         
-    def calculate_mean_HR(self):
-        self.find_peaks()
-        self.calculate_ppi()
-        self.meanPPI()
-        self.meanHR()
+    # def SD2(self):
+    #     sd2 = math.sqrt((2 * (self.SDNN_value ** 2)) - (self.SDSD_value ** 2 / 2))
+    #     return sd2
         
     def calculate_all(self):
         self.find_peaks()
         self.calculate_ppi()
         self.meanPPI()
         self.meanHR()
-        self.SDNN()
-        self.RMSSD()
-        self.SDS()
-
-    def SDNN(self):
-        if not self.PPI:
-            print("Warning: PPI data is empty, cannot calculate SDNN.")
-            return 0
-        mean_ppi = self.meanPPI()
-        variance = sum((x - mean_ppi) ** 2 for x in self.PPI) / (len(self.PPI) - 1)
-        self.SDNN_value = math.sqrt(variance)
-        return self.SDNN_value
-
-    def RMSSD(self):
-        if len(self.PPI) <= 1:
-            print("Warning: Insufficient PPI data to calculate RMSSD.")
-            return 0
-        diffs = [(self.PPI[i + 1] - self.PPI[i]) ** 2 for i in range(len(self.PPI) - 1)]
-        rmssd = math.sqrt(sum(diffs) / len(diffs))
-        self.RMSSD = rmssd
-        return rmssd
-
-    def SDSD(self):
-        if len(self.PPI) <= 1:
-            print("Warning: Insufficient PPI data to calculate SDSD.")
-            return 0
-        pp_diff = [self.PPI[i + 1] - self.PPI[i] for i in range(len(self.PPI) - 1)]
-        first = sum([x ** 2 for x in pp_diff]) / (len(pp_diff) - 1)
-        second = (sum(pp_diff) / len(pp_diff)) ** 2
-        self.SDSD_value = math.sqrt(first - second)
-        return self.SDSD_value
-
-    def SD1(self):
-        sd1 = 0
-        if self.SDSD_value > 0:
-            sd1 = math.sqrt(self.SDSD_value ** 2 / 2)
-        return round(sd1)
-
-    def SD2(self):
-        sd2 = 0
-        if self.SDNN_value > 0 and self.SDSD_value > 0:
-            sd2 = math.sqrt((2 * (self.SDNN_value * 2)) - (self.SDSD_value * 2 / 2))
-        return round(sd2)
+        #self.SDNN()
+        #self.SDSD()
+        #self.RMSSD()
