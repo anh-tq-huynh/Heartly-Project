@@ -1,24 +1,15 @@
-from array import array
-
 class RoundRobin:
-    def __init__(self, size, typecode='H'):
-        """
-        Initialize a fixed-size round-robin buffer using array for unsigned integers.
-        :param size: maximum number of elements
-        :param typecode: typecode for array (defaults to unsigned 16-bit 'H')
-        """
+    def __init__(self, size):
         self.size = size
-        self.typecode = typecode
-        self.buffer = array(self.typecode, [0] * size)
+        self.buffer = [None] * size
         self.head = 0
         self.tail = 0
         self.is_full = False
 
     def append(self, item):
-        """Append an unsigned integer to the buffer, overwriting oldest when full."""
         self.buffer[self.head] = item
-        self.head = (self.head + 1) % self.size      
-        
+        self.head = (self.head + 1) % self.size
+
         if self.is_full:
             self.tail = (self.tail + 1) % self.size
 
@@ -26,30 +17,27 @@ class RoundRobin:
             self.is_full = True
 
     def get(self):
-        """
-        Retrieve buffer contents in insertion order as an array of unsigned ints.
-        """
         if not self.is_full and self.head == self.tail:
-            # buffer is empty
-            return array(self.typecode, [])
+            return []  # buffer is empty
 
-        result = array(self.typecode, [0] * self.size)
+        items = []
         idx = self.tail
-        for i in range(self.size):
-            result[i] = self.buffer[idx]
+
+        while True:
+            items.append(self.buffer[idx])
+            if idx == self.head - 1 and not (self.is_full and self.head == self.tail):
+                break
             idx = (idx + 1) % self.size
+            if idx == self.tail:
+                break
 
-        return result
-
+        return items
+    
     def clear(self):
-        """Reset the buffer to empty."""
-        self.buffer = array(self.typecode, [0] * self.size)
         self.head = 0
-        self.tail = 0
         self.is_full = False
-
+        
     def __len__(self):
-        """Return number of elements currently in buffer."""
         if self.is_full:
             return self.size
         if self.head >= self.tail:

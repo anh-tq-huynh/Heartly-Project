@@ -6,6 +6,7 @@ from machine import Timer
 
 from src.buffer import RoundRobin
 from src.calculations import HRVAnalysis
+from src.graphing import draw_data
 
 import array
 import sys
@@ -25,7 +26,7 @@ FD_BUFFER_SIZE = 100
 
 ##### Heartrate calculation (HB)
 HR_FREQUENCY_HZ = 1
-HR_BUFFER_SIZE = FD_FREQUENCY_HZ * 10
+HR_BUFFER_SIZE = FD_FREQUENCY_HZ * 5
     
 # --- Live SOS filter class ---
 
@@ -147,30 +148,83 @@ def fd_timer_callback(timer):
     if finger_state == FINGER_ON:
         hr_buffer.append(raw_data)
 
-fd_timer = Timer()
-fd_timer.init(mode=Timer.PERIODIC, freq=FD_FREQUENCY_HZ, callback=fd_timer_callback)
+
 
 # ---- Main loop ----
-while True:
-    # Check if finger detection buffer (100 samples) is full to update finger state.
-    if len(fd_buffer) == FD_BUFFER_SIZE:
-        update_finger_state()
+# i2c = I2C(1, scl = Pin(15), sda = Pin(14), freq = 400000)
+# oled_width = 128
+# oled_height = 64
+# oled = SSD1306_I2C(oled_width, oled_height, i2c)
 
-    # Check if finger is pressed and the heartrate buffer is full to calculate heartrate data.
-    if finger_state == FINGER_ON:
-        if len(hr_buffer) == HR_BUFFER_SIZE:
-            hr_samples = hr_buffer.get()
-            hr_samples_filtered = array.array('d', [0] * len(hr_samples))
-            for index in range(len(hr_samples)):
-                hr_samples_filtered[index] = sosfilter.process(hr_samples[index])
-            hrv.add_sample(hr_samples_filtered)
-            hrv.calculate_all()
-            print(f"peaks: {hrv.peaks} ppis: {hrv.PPIs}")
-            print(f"mean ppi: {hrv.meanPPI_value}")
-            print(f"mean hr: {hrv.meanHR_value}")
+def finger_sensor(time_to_record,oled,encoder):
+    fd_timer = Timer()
+    fd_timer.init(mode=Timer.PERIODIC, freq=FD_FREQUENCY_HZ, callback=fd_timer_callback)
+    recorded_time = 0
+    count = 0
+    collect_data_countdown = 5
+
+
+    while True:
+        gc.collect()
+        #Check if any input is added to the encoder
+        if encoder.fifo.has_data():
+            direction = encoder.fifo.get()
+            if direction == 2:
+                return hrv
+            
+        # Check if finger detection buffer (100 samples) is full to update finger state.
+        if len(fd_buffer) == FD_BUFFER_SIZE:
+            update_finger_state()
+
+        # Check if finger is pressed and the heartrate buffer is full to calculate heartrate data.
+        if finger_state == FINGER_ON:
+            if len(hr_buffer) == HR_BUFFER_SIZE:
+                recorded_time += 5000 #ms
+#                 if recorded_time >= time_to_record:
+#                     oled.text("PRESS to stop",0,56,1)
+                    
+      
+                hr_samples = hr_buffer.get()
+                print(len(hr_samples))
+                
+                prev_hr_samples = array.array('H', [0]*len(hr_samples))
+                for index in range(len(hr_samples)):
+                    prev_hr_samples[index] = hr_samples[index]
+                    
+                    
+                draw_data(oled,prev_hr_samples,hrv.meanHR_value, recorded_time, time_to_record)
+                del prev_hr_samples
+                
+                gc.collect()
+
+                hr_samples_filtered = array.array('d', [0] * len(hr_samples))
+                for index in range(len(hr_samples)):
+                    hr_samples_filtered[index] = sosfilter.process(hr_samples[index])
+                hrv.add_sample(hr_samples_filtered)
+                del hr_samples_filtered
+                hrv.calculate_all()
+                print(len(hrv.PPIs))
+#                 print(f"peaks: {hrv.peaks} ppis: {hrv.PPIs}")
+#                 print(f"mean ppi: {hrv.meanPPI_value}")
+#                 print(f"mean hr: {hrv.meanHR_value}")
+                
+#                 if len(prev_hr_samples) >= 1250:
+#                     prev_hr_samples = [1250:]
+                
+                
+            else:
+                oled.fill(0)
+                print(f"Collecting samples (5s)...")
+                oled.text("Collecting data",5,20,1)
+                oled.text(f"{collect_data_countdown} seconds left",5,40,1)
+                collect_data_countdown -= 1
+                oled.show()
         else:
-            print(f"Collecting samples (10s)...")
-    else:
-        print("Waiting for finger...")
+            print("Waiting for finger...")
+            oled.fill(0)
+            oled.text("Place your",10,10,1)
+            oled.text("index finger",10,20,1)
+            oled.text("on the sensor",10,30,1)
+            oled.show()
 
-    time.sleep(1)
+        time.sleep(1)
