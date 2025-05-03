@@ -25,7 +25,7 @@ FD_BUFFER_SIZE = 100
 
 ##### Heartrate calculation (HB)
 HR_FREQUENCY_HZ = 1
-HR_BUFFER_SIZE = FD_FREQUENCY_HZ * 10
+HR_BUFFER_SIZE = FD_FREQUENCY_HZ * 5
     
 # --- Live SOS filter class ---
 
@@ -169,8 +169,13 @@ while True:
             print(f"peaks: {hrv.peaks} ppis: {hrv.PPIs}")
             print(f"mean ppi: {hrv.meanPPI_value}")
             print(f"mean hr: {hrv.meanHR_value}")
+            print(f"mean sdnn: {hrv.SDNN_value}")
+            print(f"mean rmssd: {hrv.RMSSD_value}")
+            print(f"mean sdsd: {hrv.SDSD_value}")
+            print(f"mean pns: {hrv.PNS_value}")
+            print(f"mean sns: {hrv.SNS_value}")
         else:
-            print(f"Collecting samples (10s)...")
+            print(f"Collecting samples (5s)...")
     else:
         print("Waiting for finger...")
 
