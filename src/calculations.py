@@ -4,6 +4,9 @@ import array
 
 class HRVAnalysis:
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.samples = None
         self.peaks = []
         self.PPIs = []

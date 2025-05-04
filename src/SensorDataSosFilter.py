@@ -161,16 +161,11 @@ def finger_sensor(time_to_record,oled,encoder):
     fd_timer = Timer()
     fd_timer.init(mode=Timer.PERIODIC, freq=FD_FREQUENCY_HZ, callback=fd_timer_callback)
     recorded_time = 0
-    count = 0
-    collect_data_countdown = 5
+    hrv.reset()
+
     prev_hr_samples = array.array('H', [0]*128)
-    window_size = 50
-    temp_sum = 0
 
     while True:
-#         gc.collect()
-#         temp_sum = 0
-        
             
         #Check if any input is added to the encoder
         if encoder.fifo.has_data() and recorded_time > time_to_record:
@@ -178,6 +173,7 @@ def finger_sensor(time_to_record,oled,encoder):
             if direction == 2:
                 fd_buffer.clear()
                 hr_buffer.clear()
+                fd_timer.deinit()
                 finger_state = FINGER_OFF
                 return hrv
             
@@ -215,8 +211,6 @@ def finger_sensor(time_to_record,oled,encoder):
                 hrv.add_sample(hr_samples_filtered)
                 del hr_samples_filtered
                 hrv.calculate_all()
-                if len(hrv.PPIs) >= 70:
-                    hrv.PPIs = hrv.PPIs[20:]
 #                 print(len(hrv.PPIs))
 #                 print(f"peaks: {hrv.peaks} ppis: {hrv.PPIs}")
 #                 print(f"mean ppi: {hrv.meanPPI_value}")
