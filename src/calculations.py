@@ -1,5 +1,6 @@
 import math
 import time
+import array
 
 class HRVAnalysis:
     def __init__(self):
@@ -11,6 +12,8 @@ class HRVAnalysis:
         self.SDSD_value = 0
         self.SDNN_value = 0
         self.RMSSD_value = 0
+        self.SDS_value = 0
+        self.PNS_value = 0
         
     def add_sample(self, data):
         self.samples = data #acumulate new samples
@@ -54,7 +57,7 @@ class HRVAnalysis:
 
     # Peak-to-peak interval (in ms)    
     def calculate_ppi(self, sampling_interval_ms=4):
-        self.PPIs.clear()
+#         self.PPIs.clear()
         for i in range(len(self.peaks) - 1):
             ppi = (self.peaks[i + 1] - self.peaks[i]) * sampling_interval_ms  # Adjust based on sampling rate
             if 300 < ppi < 2000:  # Valid PPI range
@@ -75,46 +78,63 @@ class HRVAnalysis:
         self.meanHR_value = 60000 / self.meanPPI_value  # Convert PPI to HR
         return self.meanHR_value
 
-    # def SDNN(self):
-    #     if len(self.PPIs) < 2:
-    #         print("Warning: PPI data is empty, cannot calculate SDNN.")
-    #         return 0
-    #     mean_ppi = self.meanPPI()
-    #     variance = sum((x - mean_ppi) ** 2 for x in self.PPIs) / (len(self.PPIs) - 1)
-    #     self.SDNN_value = math.sqrt(variance)
-    #     return self.SDNN_value
+    def SDNN(self):
+        if len(self.PPIs) < 3:
+             print("Warning: PPI data is empty, cannot calculate SDNN.")
+             return 0
+        mean_ppi = self.meanPPI()
+        variance = sum((x - mean_ppi) ** 2 for x in self.PPIs) / (len(self.PPIs) - 1)
+        self.SDNN_value = math.sqrt(variance)
+        return self.SDNN_value
     
-    # def RMSSD(self):
-    #     if len(self.PPIs) < 2:
-    #         print("Warning: Insufficient PPI data to calculate RMSSD.")
-    #         return 0
-    #     diffs = [(self.PPIs[i + 1] - self.PPIs[i]) for i in range(len(self.PPIs) - 1)]
-    #     self.RMSSD_value = math.sqrt(sum(diffs)/len(diffs))
-    #     return self.RMSSD_value
+    def RMSSD(self):
+        if len(self.PPIs) < 3:
+            print("Warning: Insufficient PPI data to calculate RMSSD.")
+            return 0
+        diffs = [(self.PPIs[i + 1] - self.PPIs[i]) for i in range(len(self.PPIs) - 1)]
+        for i in range(len(self.PPIs)-1):
+            squared = array.array ('f', [])
+            for d in diffs:
+                squared.append(d * d)
+        #compute squared diffs to avoid negative numbers on sqrt
+        self.RMSSD_value = math.sqrt(sum(squared)/len(squared))
+        return self.RMSSD_value
                  
-    # def SDSD(self):
-    #     if len(self.PPIs) < 2:
-    #         print("Warning: Insufficient PPI data to calculate SDSD.")
-    #         return 0
-    #     diffs = [self.PPIs[i + 1] - self.PPIs[i] for i in range(len(self.PPIs) - 1)]
-    #     mean_diffs = sum(diffs) / len(diffs)
-    #     variance_diffs = sum((d - mean_diffs)**2 for d in diffs)/(len(diffs)-1)
-    #     self.SDSD_value = math.sqrt(variance_diffs)
-    #     return self.SDSD_value
+    def SDSD(self):
+        if len(self.PPIs) < 3:
+            print("Warning: Insufficient PPI data to calculate SDSD.")
+            return 0
+        diffs = [self.PPIs[i + 1] - self.PPIs[i] for i in range(len(self.PPIs) - 1)]
+        mean_diffs = sum(diffs) / len(diffs)
+        variance_diffs = sum((d - mean_diffs)**2 for d in diffs)/(len(diffs)-1)
+        self.SDSD_value = math.sqrt(variance_diffs)
+        return self.SDSD_value        
 
-    # def SD1(self):
-    #     sd1 = math.sqrt(self.SDSD_value ** 2 / 2)
-    #     return sd1
+    def PNS(self):
+        if self.SDSD_value == 0:
+            self.SDSD()
+        self.PNS_value = math.sqrt(self.SDSD_value ** 2 / 2)
+        return self.PNS_value
         
-    # def SD2(self):
-    #     sd2 = math.sqrt((2 * (self.SDNN_value ** 2)) - (self.SDSD_value ** 2 / 2))
-    #     return sd2
-        
+    def SNS(self):
+        if self.SDNN_value == 0:
+            self.SDNN()
+        if self.SDSD_value == 0:
+            self.SDSD()
+        base = (2 * (self.SDNN_value ** 2)) - (self.SDSD_value ** 2 / 2)
+        if base < 0:
+            base = 0.0
+        self.SNS_value = math.sqrt(base)
+        return self.SNS_value
+       
+           
     def calculate_all(self):
         self.find_peaks()
         self.calculate_ppi()
         self.meanPPI()
         self.meanHR()
-        #self.SDNN()
-        #self.SDSD()
-        #self.RMSSD()
+        self.SDNN()
+        self.SDSD()
+        self.RMSSD()
+        self.SNS()
+        self.PNS()

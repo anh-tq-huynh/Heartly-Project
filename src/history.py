@@ -16,22 +16,28 @@ class History():
         self.history = None
         """
         
-    def create_history(self,hr,mean_ppi,rmssd,sdnn):
-        """self.history = {
-            "Mean HR": self.meanHR_value,
-            "Mean PPI": self.meanPPI_value,
-            "RMSSD": self.RMSSD,
-            "SDNN": self.SDNN_value,
-            }"""
+    def create_history(self,hr,mean_ppi,rmssd,sdnn, pns, sns):
+        filename = "history.json"
+        existing_data = []
+        try:
+            with open(filename, 'r') as f:
+                existing_data = json.load(f)
+        except Exception as e:
+            print(e)
+        if not existing_data:
+            index = 1
+        else:
+            index = len(existing_data) +1
         self.history = {
-            "id": History.id,
+            "id": index,
             "Time": timestamp(),
             "Mean HR": hr,
             "Mean PPI": mean_ppi,
             "RMSSD": rmssd,
             "SDNN": sdnn,
+            "PNS" : pns,
+            "SNS": sns,
             }
-        History.id += 1
             
     def save_to_history(self):
         filename = "history.json"

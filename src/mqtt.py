@@ -17,6 +17,7 @@ class Connection:
         self.wlan_status = "off"
         self.response_received = False
         self.data_received = None
+        #print(self.mqtt_client)
         
         self.hr = 0
         self.ppi = 0
@@ -24,15 +25,19 @@ class Connection:
         self.sdnn = 0
         
     def wlan_connection(self):
-        try:
-            wlan = network.WLAN(network.STA_IF)
-            wlan.active(True)
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        try:   
             wlan.connect(self.ssid, self.password)
-            self.wlan_status = "on"
-            print("WLAN connection successful")
+            if wlan.isconnected():
+                self.wlan_status = "on"
+                print("WLAN connection successful")
+            
         except Exception as e:
             print("Failed to connect WiFi",e)
-
+        
+        
+    
     def mqtt_connection(self):
         print("Connecting MQTT...")
         try:
@@ -66,10 +71,12 @@ class Connection:
         
         try:
             response = json.loads(msg)
-            self.hr = round(response['data']['analysis']['mean_hr_bpm'],2)
-            self.ppi = round(response['data']['analysis']['mean_rr_ms'],2)
-            self.rmssd = round(response['data']['analysis']['rmssd_ms'],2)
-            self.sdnn = round(response['data']['analysis']['sdnn_ms'],2)
+            self.hr = int(response['data']['analysis']['mean_hr_bpm'])
+            self.ppi = int(response['data']['analysis']['mean_rr_ms'])
+            self.rmssd = int(response['data']['analysis']['rmssd_ms'])
+            self.sdnn = int(response['data']['analysis']['sdnn_ms'])
+            self.pns = round(response['data']['analysis']['pns_index'],3)
+            self.sns = round(response['data']['analysis']['sns_index'],3)
             self.data_received = {
                 "id": response.get("id"),
                 "mean_hr": f"{response['data']['analysis']['mean_hr_bpm']:.2f}"

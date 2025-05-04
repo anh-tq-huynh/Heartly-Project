@@ -157,27 +157,39 @@ def fd_timer_callback(timer):
 # oled = SSD1306_I2C(oled_width, oled_height, i2c)
 
 def finger_sensor(time_to_record,oled,encoder):
+    global countdown_done, finger_state
     fd_timer = Timer()
     fd_timer.init(mode=Timer.PERIODIC, freq=FD_FREQUENCY_HZ, callback=fd_timer_callback)
     recorded_time = 0
     count = 0
     collect_data_countdown = 5
-
+    prev_hr_samples = array.array('H', [0]*128)
+    window_size = 50
+    temp_sum = 0
 
     while True:
-        gc.collect()
+#         gc.collect()
+#         temp_sum = 0
+        
+            
         #Check if any input is added to the encoder
-        if encoder.fifo.has_data():
+        if encoder.fifo.has_data() and recorded_time > time_to_record:
             direction = encoder.fifo.get()
             if direction == 2:
+                fd_buffer.clear()
+                hr_buffer.clear()
+                finger_state = FINGER_OFF
                 return hrv
             
         # Check if finger detection buffer (100 samples) is full to update finger state.
         if len(fd_buffer) == FD_BUFFER_SIZE:
             update_finger_state()
+            print (finger_state)
 
         # Check if finger is pressed and the heartrate buffer is full to calculate heartrate data.
-        if finger_state == FINGER_ON:
+        if finger_state == FINGER_ON:    
+#             graph_timer = Timer()
+#             graph_timer.init(mode=Timer.PERIODIC, freq=1000, callback=lambda t: draw_timer_callback(t, oled, hrv, recorded_time, time_to_record))
             if len(hr_buffer) == HR_BUFFER_SIZE:
                 recorded_time += 5000 #ms
 #                 if recorded_time >= time_to_record:
@@ -203,7 +215,9 @@ def finger_sensor(time_to_record,oled,encoder):
                 hrv.add_sample(hr_samples_filtered)
                 del hr_samples_filtered
                 hrv.calculate_all()
-                print(f"PPIs: {len(hrv.PPIs)}")
+                if len(hrv.PPIs) >= 70:
+                    hrv.PPIs = hrv.PPIs[20:]
+#                 print(len(hrv.PPIs))
 #                 print(f"peaks: {hrv.peaks} ppis: {hrv.PPIs}")
 #                 print(f"mean ppi: {hrv.meanPPI_value}")
 #                 print(f"mean hr: {hrv.meanHR_value}")
@@ -213,12 +227,15 @@ def finger_sensor(time_to_record,oled,encoder):
                 
                 
             else:
-                oled.fill(0)
-                print(f"Collecting samples (5s)...")
-                oled.text("Collecting data",5,20,1)
-                oled.text(f"{collect_data_countdown} seconds left",5,40,1)
-                collect_data_countdown -= 1
-                oled.show()
+                for i in range(5,0,-1):
+                    oled.fill(0)
+                    print(f"Collecting samples (5s)...")
+                    oled.text("Collecting data",5,20,1)
+                    oled.text(f"{i} seconds left",5,40,1)
+                    time.sleep(1)
+                    oled.show()
+                countdown_done = True
+                
         else:
             print("Waiting for finger...")
             oled.fill(0)
@@ -227,4 +244,4 @@ def finger_sensor(time_to_record,oled,encoder):
             oled.text("on the sensor",10,30,1)
             oled.show()
 
-        time.sleep(1)
+        time.sleep(0.05)

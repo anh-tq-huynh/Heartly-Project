@@ -2,7 +2,6 @@
 from src.hardware import Display, Encoder, Sensor
 from src.DisplayControl import DisplayControl
 from src.mqtt import Connection
-from src.sensor import main
 from src.history import History
 from src.kubiosDataPrep import Kubios
 from src.SensorDataSosFilter import finger_sensor
@@ -10,12 +9,15 @@ from src.calculations import HRVAnalysis
 from src.graphing import draw_data
 from src.buffer import RoundRobin
 import time,gc, asyncio
+import ujson as json
 
 #--------------initiate variables--------------#
 #SSID = "KME759_Group_2_2.4GHz"
 #PASSWORD = "V@cineVoy@ge"
 SSID = "abinader"
 PASSWORD = "senhadobrunoetaysa1985"
+#SSID = "Zyxel_09A1"
+#ASSWORD = "RQAFDNPMRN"
 BROKER_IP = "networkinggroup2.asuscomm.com"
 
 
@@ -32,7 +34,7 @@ class Action():
         """
             self.state list:
             1 - Welcome screen
-            2 - Establish WiFi and MQTT connection
+            2 - Establish WiFi connection
             3 - Main menu
             4 - HR
             5 - HRV
@@ -58,11 +60,9 @@ class Action():
             time.sleep(0.5)
         self.display.print_text("Successful ^.^ ")
         time.sleep(0.5)
-
     def attempt_mqtt(self):
         #Connect MQTT
         self.display.print_text("Connect MQTT")
-        time.sleep(0.5)
         self.display.connecting()
         self.connection.mqtt_connection()
         while self.connection.mqtt_status == "off":
@@ -77,8 +77,22 @@ class Action():
         dataset = self.history.get_from_history(self.selection)
         self.display.print_selected_history(dataset)
         self.update_state()
-    
-    def kubios_main_flow(self,topic,data):
+        
+    def hrv_run(self):
+        hrv = finger_sensor(40000,self.display.oled, self.display.rotary)
+        self.history.create_history(int(hrv.meanHR_value), int(hrv.meanPPI_value),int(hrv.RMSSD_value), int(hrv.SDNN_value), round(hrv.PNS_value,3), round(hrv.SNS_value,3))
+        self.history.save_to_history()
+        try:
+            filename = "history.json"
+            with open(filename, 'r') as f:
+                existing_data = json.load(f)
+        except Exception as e:
+            print(e)
+        self.display.print_selected_history(existing_data[-1])
+        self.update_state()
+        
+        
+    async def kubios_main_flow(self,topic,data):
         self.kubios.add_ppi(data)
         dataset = self.kubios.create_data()
         print(f"dataset: {dataset}")
@@ -94,10 +108,12 @@ class Action():
             self.display.welcome()
             self.state = 2
             time.sleep(0.5)
+
         elif self.state == 2: #Connect to WiFi
             self.attempt_connection()
             self.state = 3
             time.sleep(0.5)
+
         elif self.state == 3: #Main menu
             menu = ["HR", "HRV", "Kubios","History"]
             self.display.execute_menu(menu)
@@ -109,13 +125,11 @@ class Action():
             self.state = 3
             
         elif self.state == 5: #HRV
-            hrv = finger_sensor(5000,self.display.oled, self.display.rotary)
-            self.history.create_history(hrv.meanHR_value, hrv.meanPPI_value,hrv.RMSSD_value, hrv.SDNN_value)
-            self.history.save_to_history()
-            self.state = 3
+            self.hrv_run()
+            
         elif self.state == 6: #Kubios
             self.attempt_mqtt()
-            hrv = finger_sensor(35000,self.display.oled, self.display.rotary)
+            hrv = finger_sensor(40000,self.display.oled, self.display.rotary)
             sample = hrv.PPIs
             print(f"sample: {sample}")
             topic = "kubios-request"
@@ -123,8 +137,3 @@ class Action():
             self.state = 3
         elif self.state == 7:
             self.history_run()
-
-action = Action()
-while True:
-    action.execute_on_state()
-    #print(action.state)

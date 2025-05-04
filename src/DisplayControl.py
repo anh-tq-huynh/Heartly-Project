@@ -13,7 +13,7 @@ class DisplayControl(Display):
         self.rotary = Encoder()
         self.current_selection = 1
         self.state = None
-        self.line_height = 12
+        self.line_height = 9
         """
             self.state list:
             1 - Welcome screen
@@ -61,15 +61,15 @@ class DisplayControl(Display):
         
     def print_selected_history(self,history):
         color = 1
-        y = 0
-        self.oled.fill(0)         
-        self.oled.text(history["Time"], 0, self.line_height * 0 - y)
-        self.oled.text(f'Mean HR: {history["Mean HR"]}', 0, self.line_height * 1 - y)
-        self.oled.text(f'Mean PPI: {history["Mean PPI"]}', 0, self.line_height * 2 - y)
-        self.oled.text(f'RMSSD: {history["RMSSD"]}', 0, self.line_height * 3 - y)
-        self.oled.text(f'SDNN: {history["SDNN"]}', 0, self.line_height * 4 - y)
-        #oled.text(f'SNS: 1.234', 0, line_height*5 - y)
-        #oled.text(f'PNS: -1.234', 0, line_height*6 - y)
+        self.clear()        
+        self.oled.text(history["Time"], 0, self.line_height * 0)
+        self.oled.text(f'Mean HR: {history["Mean HR"]}', 0, self.line_height * 1)
+        self.oled.text(f'Mean PPI: {history["Mean PPI"]}', 0, self.line_height * 2)
+        self.oled.text(f'RMSSD: {history["RMSSD"]}', 0, self.line_height * 3)
+        self.oled.text(f'SDNN: {history["SDNN"]}', 0, self.line_height * 4)
+        self.oled.text(f'PNS: {history["PNS"]}', 0, self.line_height * 5)
+        self.oled.text(f'SNS: {history["SNS"]}', 0, self.line_height * 6)
+ 
         self.oled.show()
         
         
@@ -83,13 +83,12 @@ class DisplayControl(Display):
             time.sleep(0.05)
             
     def hr_collect(self):
-        self.oled.fill(0)
+        self.clear()
         self.oled.text("Place your",10,10,1)
         self.oled.text("index finger",10,20,1)
         self.oled.text("on the sensor",10,30,1)
         self.oled.text("PRESS to start",0,50,1)
         self.oled.show()
-        
     
     def print_menu(self, options):
         bear = bytearray([0x1F, 0x61, 0x8B, 0xA2, 0xA2, 0x8B, 0x61, 0x1F])
@@ -140,35 +139,39 @@ class DisplayControl(Display):
                     return self.state
     
     def execute_history(self,options):
-        start_index = 0
-        num_visible_lines = 6
-        self.print_history(options, start_index)
-        
-        while True:
-            while self.rotary.fifo.has_data():
-                direction = self.rotary.fifo.get()
-                #print(direction)  # For debugging
+        if options != []:
+            start_index = 0
+            num_visible_lines = 6
+            self.print_history(options, start_index)
+            
+            while True:
+                while self.rotary.fifo.has_data():
+                    direction = self.rotary.fifo.get()
+                    #print(direction)  # For debugging
 
-                if direction == 1:  # Rotary encoder clockwise
-                    if self.current_selection < len(options):
-                        self.current_selection += 1
-                        if self.current_selection >= start_index + num_visible_lines:
-                            start_index += 1  # Scroll down
-                        self.print_history(options, start_index)
-                        
+                    if direction == 1:  # Rotary encoder clockwise
+                        if self.current_selection < len(options):
+                            self.current_selection += 1
+                            if self.current_selection >= start_index + num_visible_lines:
+                                start_index += 1  # Scroll down
+                            self.print_history(options, start_index)
+                            
 
-                elif direction == -1:  # Rotary encoder counter-clockwise
-                    if self.current_selection > 1:
-                        self.current_selection -= 1
-                        if self.current_selection < start_index + 1:
-                            start_index -= 1  # Scroll up
-                        self.print_history(options, start_index)
+                    elif direction == -1:  # Rotary encoder counter-clockwise
+                        if self.current_selection > 1:
+                            self.current_selection -= 1
+                            if self.current_selection < start_index + 1:
+                                start_index -= 1  # Scroll up
+                            self.print_history(options, start_index)
 
-                elif direction == 2:  # Rotary encoder button pressed
-                    self.selection = self.current_selection  # Match the state with the options
-                    #print(self.selection)
-                    return self.selection
-            time.sleep(0.1)
+                    elif direction == 2:  # Rotary encoder button pressed
+                        self.selection = self.current_selection  # Match the state with the options
+                        #print(self.selection)
+                        return self.selection
+                time.sleep(0.1)
+            else:
+                oled.text("No data",10,20,1)
+                oled.text("to show",10,30,1)
         
 """
 display = DisplayControl()
