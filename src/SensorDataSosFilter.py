@@ -245,3 +245,4 @@ def finger_sensor(time_to_record,oled,encoder):
             oled.show()
 
         time.sleep(0.05)
+

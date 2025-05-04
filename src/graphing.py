@@ -69,3 +69,4 @@ def draw_data(oled, data_list, hr,recorded_time, time_to_record):
 #         time.sleep(0.05)
         
 
+

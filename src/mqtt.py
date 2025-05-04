@@ -42,10 +42,13 @@ class Connection:
         print("Connecting MQTT...")
         try:
             self.mqtt_client.connect(clean_session = True)
-            print("MQTT connection successful")
             self.mqtt_status = "on"
+            print("MQTT connection successful", self.mqtt_status)
+              
         except Exception as error:
             print("Failed to connect MQTT:", error)
+        gc.collect()
+        time.sleep(1)
 
     def connect(self, oled):
         # Connect to WLAN

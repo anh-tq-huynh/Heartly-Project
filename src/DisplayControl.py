@@ -42,7 +42,7 @@ class DisplayControl(Display):
         waiting_screen(text_input, self.oled)
         
     def connecting(self):
-        self.waiting_screen("Try to connect")
+        self.waiting_screen("Connecting")
         
     def sending_data(self):
         self.waiting_screen("Sending data")
@@ -57,6 +57,14 @@ class DisplayControl(Display):
     def print_text(self, text_input):
         self.clear()
         self.oled.text(text_input,0,32)
+        self.show()
+        
+    def instruction_for_sensor(self):
+        self.clear()
+        self.oled.text("Please keep", 10,10,1)
+        self.oled.text("your finger", 10,20,1)
+        self.oled.text("for minimum", 10,30,1)
+        self.oled.text("30s",10,40,1)
         self.show()
         
     def print_selected_history(self,history):
@@ -94,7 +102,7 @@ class DisplayControl(Display):
         bear = bytearray([0x1F, 0x61, 0x8B, 0xA2, 0xA2, 0x8B, 0x61, 0x1F])
         bear_framebuf = framebuf.FrameBuffer(bear, 8, 8, framebuf.MONO_VLSB)
         self.oled.fill(0)
-        y_start = 0
+        y_start = 12
 
         for index,option in enumerate(options):
             if index == self.current_selection -1:
@@ -102,7 +110,11 @@ class DisplayControl(Display):
             else:
                 text = option
             self.oled.text(text,15, y_start,1)
-            self.oled.blit(bear_framebuf,5,(self.current_selection-1)*12)
+            
+            if self.current_selection == 1:
+                self.oled.blit(bear_framebuf,5,12)
+            else:
+                self.oled.blit(bear_framebuf,5,(self.current_selection)*12)
             y_start += 12
         self.oled.show()
         
@@ -113,7 +125,7 @@ class DisplayControl(Display):
         bear_framebuf = framebuf.FrameBuffer(bear, 8, 8, framebuf.MONO_VLSB)
         for i in range(start_index, min(start_index + num_visible_lines, len(options))):
             if i + 1 == self.current_selection:
-                self.oled.text("[" + options[i] + "]", 15, (i - start_index) * 10)
+                self.oled.text("[" + options[i] + "]", 25, (i - start_index) * 10)
                 self.oled.blit(bear_framebuf,5,(i - start_index) * 10)# Highlight selected item
             else:
                 self.oled.text("  " + options[i], 8, (i - start_index) * 10)
@@ -167,6 +179,7 @@ class DisplayControl(Display):
                     elif direction == 2:  # Rotary encoder button pressed
                         self.selection = self.current_selection  # Match the state with the options
                         #print(self.selection)
+                        self.current_selection = 1
                         return self.selection
                 time.sleep(0.1)
             else:

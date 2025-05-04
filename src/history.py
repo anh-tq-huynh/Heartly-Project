@@ -57,6 +57,7 @@ class History():
     
     def list_from_history(self):
         filename = "history.json"
+        existing_data = []
         try:
             with open(filename, 'r') as f:
                 existing_data = json.load(f)
@@ -64,7 +65,7 @@ class History():
             print(e)
         history_list = []
         for i in range(len(existing_data)):
-            history_list.append(f"Measurement {i +1}")
+            history_list.append(f"Data {i +1}")
         return history_list
     
     def get_from_history(self,id):

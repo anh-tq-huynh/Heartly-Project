@@ -60,13 +60,16 @@ class Action():
             time.sleep(0.5)
         self.display.print_text("Successful ^.^ ")
         time.sleep(0.5)
+        
     def attempt_mqtt(self):
         #Connect MQTT
         self.display.print_text("Connect MQTT")
+        time.sleep(0.5)
         self.display.connecting()
         self.connection.mqtt_connection()
         while self.connection.mqtt_status == "off":
             time.sleep(0.05)
+            
         self.display.print_text("Successful ^.^ ")
         time.sleep(0.5)
 
@@ -79,7 +82,41 @@ class Action():
         self.update_state()
         
     def hrv_run(self):
-        hrv = finger_sensor(40000,self.display.oled, self.display.rotary)
+        hrv = finger_sensor(35000,self.display.oled, self.display.rotary)
+        self.history.create_history(int(hrv.meanHR_value), int(hrv.meanPPI_value),int(hrv.RMSSD_value), int(hrv.SDNN_value), round(hrv.PNS_value,3), round(hrv.SNS_value,3))
+        self.history.save_to_history()
+        existing_data = []
+        try:
+            filename = "history.json"
+            with open(filename, 'r') as f:
+                existing_data = json.load(f)
+        except Exception as e:
+            print(e)
+        
+        self.display.print_selected_history(existing_data[-1])
+        self.update_state()
+        
+        
+    def kubios_main_flow(self,topic):
+        self.attempt_mqtt()
+        
+        #instruction
+        self.display.instruction_for_sensor()
+        time.sleep(2)
+        
+        #measure
+        hrv = finger_sensor(35000,self.display.oled, self.display.rotary)
+        
+        #prep data
+        data = hrv.PPIs
+        self.kubios.add_ppi(data)
+        dataset = self.kubios.create_data()
+        print(f"dataset: {dataset}")
+        
+        #subscribe and publish to kubios
+        self.connection.main(topic, dataset)
+        
+        #receive and save to history
         self.history.create_history(int(hrv.meanHR_value), int(hrv.meanPPI_value),int(hrv.RMSSD_value), int(hrv.SDNN_value), round(hrv.PNS_value,3), round(hrv.SNS_value,3))
         self.history.save_to_history()
         try:
@@ -88,19 +125,9 @@ class Action():
                 existing_data = json.load(f)
         except Exception as e:
             print(e)
+
         self.display.print_selected_history(existing_data[-1])
         self.update_state()
-        
-        
-    async def kubios_main_flow(self,topic,data):
-        self.kubios.add_ppi(data)
-        dataset = self.kubios.create_data()
-        print(f"dataset: {dataset}")
-        #subscribe and publish to kubios
-        self.connection.main(topic, dataset)
-        hr, ppi, rmssd, sdnn = self.connection.return_result()
-        self.history.create_history(hr,ppi,rmssd,sdnn)
-        self.history.save_to_history()
     
 
     def execute_on_state(self):
@@ -125,15 +152,15 @@ class Action():
             self.state = 3
             
         elif self.state == 5: #HRV
+            self.display.instruction_for_sensor()
+            time.sleep(2)
             self.hrv_run()
             
         elif self.state == 6: #Kubios
-            self.attempt_mqtt()
-            hrv = finger_sensor(40000,self.display.oled, self.display.rotary)
-            sample = hrv.PPIs
-            print(f"sample: {sample}")
+            #print(f"sample: {sample}")
             topic = "kubios-request"
-            self.kubios_main_flow(topic,sample)
-            self.state = 3
+            self.kubios_main_flow(topic)
+            #self.state = 3
+            
         elif self.state == 7:
             self.history_run()
