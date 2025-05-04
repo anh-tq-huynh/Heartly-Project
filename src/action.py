@@ -62,10 +62,9 @@ class Action():
         #Connect MQTT
         self.display.print_text("Connect MQTT")
         time.sleep(0.5)
+        self.display.connecting()
+        self.connection.mqtt_connection()
         while self.connection.mqtt_status == "off":
-            gc.collect()
-            self.display.connecting()
-            self.connection.mqtt_connection()
             time.sleep(0.05)
         self.display.print_text("Successful ^.^ ")
         time.sleep(0.5)
