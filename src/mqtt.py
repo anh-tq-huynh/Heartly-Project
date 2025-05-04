@@ -13,6 +13,7 @@ class Connection:
         self.ssid = ssid
         self.password = password
         self.mqtt_client = MQTTClient("", broker_ip, port=1883)
+        self.mqtt_client.set_callback(self.callback)
         self.mqtt_status = "off"
         self.wlan_status = "off"
         self.response_received = False
@@ -87,7 +88,7 @@ class Connection:
         
     async def subscribe_mqtt(self,pub_topic,message):
         print("Start subscribing...")
-        self.mqtt_client.set_callback(self.callback)
+
         await self.mqtt_client.subscribe("kubios-response")
         print(message)
         self.publish_mqtt(pub_topic,message)
