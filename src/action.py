@@ -78,12 +78,12 @@ class Action():
         self.display.print_selected_history(dataset)
         self.update_state()
     
-    async def kubios_main_flow(self,topic,data):
+    def kubios_main_flow(self,topic,data):
         self.kubios.add_ppi(data)
         dataset = self.kubios.create_data()
-        print(dataset)
+        print(f"dataset: {dataset}")
         #subscribe and publish to kubios
-        await self.connection.main(topic, dataset)
+        self.connection.main(topic, dataset)
         hr, ppi, rmssd, sdnn = self.connection.return_result()
         self.history.create_history(hr,ppi,rmssd,sdnn)
         self.history.save_to_history()
@@ -115,15 +115,11 @@ class Action():
             self.state = 3
         elif self.state == 6: #Kubios
             self.attempt_mqtt()
-            sample = [
-              828, 836, 852, 760, 800, 796, 856, 824, 808, 776, 724, 816, 800, 812, 812,
-              812, 756, 820, 812, 800
-            ]
-#             hrv = finger_sensor(35000,self.display.oled, self.display.rotary)
-#             sample = hrv.PPIs
-#             print(sample)
+            hrv = finger_sensor(35000,self.display.oled, self.display.rotary)
+            sample = hrv.PPIs
+            print(f"sample: {sample}")
             topic = "kubios-request"
-            asyncio.run(self.kubios_main_flow(topic,sample))
+            self.kubios_main_flow(topic,sample)
             self.state = 3
         elif self.state == 7:
             self.history_run()
