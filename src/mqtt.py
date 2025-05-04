@@ -9,7 +9,6 @@ import micropython, gc, time
 #--------------class Connection--------------#
 class Connection:
     def __init__(self, ssid, password, broker_ip):
-        print("Here")
         self.ssid = ssid
         self.password = password
         self.mqtt_client = MQTTClient("", broker_ip, port=1883)
@@ -30,22 +29,19 @@ class Connection:
             wlan.active(True)
             wlan.connect(self.ssid, self.password)
             self.wlan_status = "on"
-            print("Succesful")
+            print("WLAN connection successful")
         except Exception as e:
             print("Failed to connect WiFi",e)
-        
-        
-    
+
     def mqtt_connection(self):
         print("Connecting MQTT...")
         try:
             self.mqtt_client.connect(clean_session = True)
-            print("Succesful")
+            print("MQTT connection successful")
             self.mqtt_status = "on"
         except Exception as error:
             print("Failed to connect MQTT:", error)
 
-    
     def connect(self, oled):
         # Connect to WLAN
         self.wlan_connection(oled)
@@ -90,7 +86,7 @@ class Connection:
         print("Start subscribing...")
 
         await self.mqtt_client.subscribe("kubios-response")
-        print(message)
+        print(f"[mqtt] message: {message}")
         self.publish_mqtt(pub_topic,message)
         
         while self.response_received != True:

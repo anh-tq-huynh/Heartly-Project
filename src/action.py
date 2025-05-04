@@ -58,6 +58,7 @@ class Action():
             time.sleep(0.5)
         self.display.print_text("Successful ^.^ ")
         time.sleep(0.5)
+
     def attempt_mqtt(self):
         #Connect MQTT
         self.display.print_text("Connect MQTT")
@@ -68,7 +69,6 @@ class Action():
             time.sleep(0.05)
         self.display.print_text("Successful ^.^ ")
         time.sleep(0.5)
-        
 
     def history_run(self):
         history_list = self.history.list_from_history()

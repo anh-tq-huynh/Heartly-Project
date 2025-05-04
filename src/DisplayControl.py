@@ -122,11 +122,11 @@ class DisplayControl(Display):
             
     def execute_menu(self,options):
         self.print_menu(options)
-        print(self.rotary.fifo.has_data())
+        #print(self.rotary.fifo.has_data())
         while True:
             while self.rotary.fifo.has_data():
                 direction = self.rotary.fifo.get()
-                print(direction)
+                #print(direction)
                 if direction == 1 and self.current_selection < len(options) :
                     self.current_selection += 1
                     self.print_menu(options)
@@ -147,7 +147,7 @@ class DisplayControl(Display):
         while True:
             while self.rotary.fifo.has_data():
                 direction = self.rotary.fifo.get()
-                print(direction)  # For debugging
+                #print(direction)  # For debugging
 
                 if direction == 1:  # Rotary encoder clockwise
                     if self.current_selection < len(options):
@@ -166,7 +166,7 @@ class DisplayControl(Display):
 
                 elif direction == 2:  # Rotary encoder button pressed
                     self.selection = self.current_selection  # Match the state with the options
-                    print(self.selection)
+                    #print(self.selection)
                     return self.selection
             time.sleep(0.1)
         

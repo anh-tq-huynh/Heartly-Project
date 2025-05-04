@@ -185,7 +185,7 @@ def finger_sensor(time_to_record,oled,encoder):
                     
       
                 hr_samples = hr_buffer.get()
-                print(len(hr_samples))
+                print(f"hr_samples: {len(hr_samples)}")
                 
                 prev_hr_samples = array.array('H', [0]*len(hr_samples))
                 for index in range(len(hr_samples)):
@@ -203,7 +203,7 @@ def finger_sensor(time_to_record,oled,encoder):
                 hrv.add_sample(hr_samples_filtered)
                 del hr_samples_filtered
                 hrv.calculate_all()
-                print(len(hrv.PPIs))
+                print(f"PPIs: {len(hrv.PPIs)}")
 #                 print(f"peaks: {hrv.peaks} ppis: {hrv.PPIs}")
 #                 print(f"mean ppi: {hrv.meanPPI_value}")
 #                 print(f"mean hr: {hrv.meanHR_value}")
