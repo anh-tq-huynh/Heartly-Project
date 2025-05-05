@@ -19,7 +19,6 @@
     ["src/liveTime.py", "http://localhost:8000/src/liveTime.py"],
     ["src/mqtt.py", "http://localhost:8000/src/mqtt.py"],
     ["src/SensorDataSosFilter.py", "http://localhost:8000/src/SensorDataSosFilter.py"],
-    ["src/sensor.py", "http://localhost:8000/src/sensor.py"],
     
     ["/run_me.py", "http://localhost:8000/sensor.py"],
     ["/history.json", "http://localhost:8000/history.json"]
