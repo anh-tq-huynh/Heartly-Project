@@ -1,3 +1,4 @@
+###READ AND PROCESS DATA FROM SENSOR###
 from machine import UART, Pin, I2C, Timer, ADC
 from ssd1306 import SSD1306_I2C
 from fifo import Fifo

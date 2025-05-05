@@ -9,7 +9,6 @@ import array
 
 
 
-#handling = DataHandling()
 data_list = []
 count = 0
 def draw_data(oled, data_list, hr,recorded_time, time_to_record):

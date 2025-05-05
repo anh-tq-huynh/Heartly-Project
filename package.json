@@ -14,6 +14,7 @@
     ["src/buffer.py", "http://localhost:8000/src/buffer.py"],
     ["src/calculations.py", "http://localhost:8000/src/calculations.py"],
     ["src/DisplayControl.py", "http://localhost:8000/src/DisplayControl.py"],
+
     ["src/DrawGraph.py", "http://localhost:8000/src/DrawGraph.py"],
     ["src/graphing.py", "http://localhost:8000/src/graphing.py"],
     ["src/hardware.py", "http://localhost:8000/src/hardware.py"],
@@ -23,8 +24,10 @@
     ["src/mqtt.py", "http://localhost:8000/src/mqtt.py"],
     ["src/SensorDataSosFilter.py", "http://localhost:8000/src/SensorDataSosFilter.py"],
     
+
     ["/history.json", "http://localhost:8000/history.json"],
     ["/run_me.py", "http://localhost:8000/run_me.py"]
+
     
        
   ],
