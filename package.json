@@ -4,6 +4,9 @@
     ["lib/piotimer.py", "http://localhost:8000/pico-lib/piotimer.py"],
     ["lib/ssd1306.mpy", "http://localhost:8000/pico-lib/ssd1306.mpy"],
     ["lib/umqtt/simple.mpy", "http://localhost:8000/pico-lib/umqtt/simple.mpy"],
+    ["lib/filefifo.py", "http://localhost:8000/pico-lib/filefifo.py"],
+    ["lib/led.py", "http://localhost:8000/pico-lib/led.py"],
+    
     
     ["src/Animations/waitingScreen.py", "http://localhost:8000/src/Animations/waitingScreen.py"],
     ["src/Animations/welcomingScreen.py", "http://localhost:8000/src/Animations/welcomingScreen.py"],
