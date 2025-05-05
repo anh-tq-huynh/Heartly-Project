@@ -10,7 +10,7 @@
     ["src/action.py", "http://localhost:8000/src/action.py"],
     ["src/buffer.py", "http://localhost:8000/src/buffer.py"],
     ["src/calculations.py", "http://localhost:8000/src/calculations.py"],
-    ["scr/DisplayControl.py", "http://localhost:8000/src/DisplayControl.py"],
+    ["src/DisplayControl.py", "http://localhost:8000/src/DisplayControl.py"],
     ["src/DrawGraph.py", "http://localhost:8000/src/DrawGraph.py"],
     ["src/graphing.py", "http://localhost:8000/src/graphing.py"],
     ["src/hardware.py", "http://localhost:8000/src/hardware.py"],
