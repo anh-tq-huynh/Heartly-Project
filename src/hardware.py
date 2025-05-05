@@ -1,3 +1,5 @@
+###Store information of hardware###
+
 from fifo import Fifo
 from piotimer import Piotimer
 from machine import UART, Pin, I2C, Timer, ADC

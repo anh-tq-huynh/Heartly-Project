@@ -1,4 +1,8 @@
 ###ACTIONS TO PERFORM###
+"""This code file compils the all functions needed into one single flow. How the device performs is determined by
+self.state within the class. Each state represents an action/a mode to perform. The self.state is updated at the end of every mode."""
+###-----------------###
+
 from src.hardware import Display, Encoder, Sensor
 from src.DisplayControl import DisplayControl
 from src.mqtt import Connection
@@ -11,13 +15,11 @@ from src.buffer import RoundRobin
 import time,gc, asyncio
 import ujson as json
 
-#--------------initiate variables--------------#
-#SSID = "KME759_Group_2_2.4GHz"
-#PASSWORD = "V@cineVoy@ge"
-SSID = "abinader"
-PASSWORD = "senhadobrunoetaysa1985"
-#SSID = "Zyxel_09A1"
-#ASSWORD = "RQAFDNPMRN"
+#--------------CHANGE YOUR WIFI CONFIGURATION HERE--------------#
+SSID = "KME759_Group_2_2.4GHz"
+PASSWORD = "V@cineVoy@ge"
+
+#--------------BROKER_IP--------------#
 BROKER_IP = "networkinggroup2.asuscomm.com"
 
 

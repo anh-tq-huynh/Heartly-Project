@@ -1,3 +1,7 @@
+###ROUND ROBIN BUFFER###
+"""In this file, the ring buffer class RoundRobin is defined, it works similarly to Fifo,
+but we changed the logic so it can get data as a list instead of a single value """
+
 from array import array
 
 class RoundRobin:

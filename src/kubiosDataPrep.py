@@ -1,3 +1,4 @@
+###CONVERT DATA INTO THE CORRECT FORMAT FOR KUBIOS###
 import ujson as json
 
 #----------class kubios-----------------------------#

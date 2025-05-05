@@ -1,3 +1,6 @@
+###CALCULATION###
+""" This is the class that contains all formulas for finding peaks and HRV calculation """
+
 import math
 import time
 import array

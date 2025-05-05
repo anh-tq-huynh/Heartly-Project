@@ -10,7 +10,7 @@
     ["src/action.py", "http://localhost:8000/src/action.py"],
     ["src/buffer.py", "http://localhost:8000/src/buffer.py"],
     ["src/calculations.py", "http://localhost:8000/src/calculations.py"],
-    ["scr/DisplayControl.py", "http://localhost:8000/scr/DisplayControl.py"],
+    ["scr/DisplayControl.py", "http://localhost:8000/src/DisplayControl.py"],
     ["src/DrawGraph.py", "http://localhost:8000/src/DrawGraph.py"],
     ["src/graphing.py", "http://localhost:8000/src/graphing.py"],
     ["src/hardware.py", "http://localhost:8000/src/hardware.py"],
@@ -19,10 +19,9 @@
     ["src/liveTime.py", "http://localhost:8000/src/liveTime.py"],
     ["src/mqtt.py", "http://localhost:8000/src/mqtt.py"],
     ["src/SensorDataSosFilter.py", "http://localhost:8000/src/SensorDataSosFilter.py"],
-    ["src/sensor.py", "http://localhost:8000/src/sensor.py"],
     
     ["/run_me.py", "http://localhost:8000/sensor.py"],
-    ["/history.json", "http://localhost:8000/history.json"]
+    ["/history.json", "http://localhost:8000/history.json"],
     
        
   ],
