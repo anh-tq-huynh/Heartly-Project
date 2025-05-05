@@ -5,22 +5,26 @@
     ["lib/ssd1306.mpy", "http://localhost:8000/src/pico-lib/ssd1306.mpy"],
     ["lib/umqtt/simple.mpy", "http://localhost:8000/src/pico-lib/umqtt/simple.mpy"],
     
-    ["src/Animations/ImgConverter.py", "http://localhost:8000/src/Animations/ImgConverter.py"],
     ["src/Animations/waitingScreen.py", "http://localhost:8000/src/Animations/waitingScreen.py"],
     ["src/Animations/welcomingScreen.py", "http://localhost:8000/src/Animations/welcomingScreen.py"],
-    ["scr/DisplayControl.py", "http://localhost:8000/scr/DisplayControl.py"],
-    ["src/DrawGraph.py", "http://localhost:8000/src/DrawGraph.py"],
-    ["src/SensorDataSosFilter.py", "http://localhost:8000/src/SensorDataSosFilter.py"],
     ["src/action.py", "http://localhost:8000/src/action.py"],
     ["src/buffer.py", "http://localhost:8000/src/buffer.py"],
     ["src/calculations.py", "http://localhost:8000/src/calculations.py"],
+    ["scr/DisplayControl.py", "http://localhost:8000/scr/DisplayControl.py"],
+    ["src/DrawGraph.py", "http://localhost:8000/src/DrawGraph.py"],
     ["src/graphing.py", "http://localhost:8000/src/graphing.py"],
     ["src/hardware.py", "http://localhost:8000/src/hardware.py"],
     ["src/history.py", "http://localhost:8000/src/history.py"],
     ["src/kubiosDataPrep.py", "http://localhost:8000/src/kubiosDataPrep.py"],
     ["src/liveTime.py", "http://localhost:8000/src/liveTime.py"],
     ["src/mqtt.py", "http://localhost:8000/src/mqtt.py"],
-    ["src/sensor.py", "http://localhost:8000/src/sensor.py"]
+    ["src/SensorDataSosFilter.py", "http://localhost:8000/src/SensorDataSosFilter.py"],
+    ["src/sensor.py", "http://localhost:8000/src/sensor.py"],
+    
+    ["/run_me.py", "http://localhost:8000/sensor.py"],
+    ["/history.json", "http://localhost:8000/history.json"]
+    
+       
   ],
   "deps": [
   ],
