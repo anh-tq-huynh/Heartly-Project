@@ -21,6 +21,7 @@
     ["src/SensorDataSosFilter.py", "http://localhost:8000/src/SensorDataSosFilter.py"],
     
     ["/history.json", "http://localhost:8000/history.json"]
+    ["/run_me.py", "http://localhost:8000/run_me.py"]
     
        
   ],
