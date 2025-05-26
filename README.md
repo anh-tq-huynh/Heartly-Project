@@ -87,7 +87,7 @@ If you use Window
 4. Select the desired mode
 
 ### Acknowledgement
-- Teammates in building this project: [Tamseela Mahmood](https://github.com/tamseelaa), [Taysa Abinader](https://github.com/TaysaAbinader), [Lan-Anh Tran](https://github.com/anhlt13)
+- Teammates in building this project: [Tamseela Mahmood](https://github.com/tamseelaa), [Taysa Abinader](https://github.com/TaysaAbinader), [Lan-Anh Tran](https://github.com/anhlt13), [Anh Huynh](https://github.com/anh-tq-huynh)
 - Professor Sakari Lukkarinen - For the SOS model for filtering data read from the sensor
 
 ### Appendix
