@@ -24,6 +24,16 @@ _Screens of the program_
 
 _Welcoming screen_
 
+[![teaser](https://github.com/user-attachments/assets/22b44420-0b3b-4bd5-90a2-6fcb8d6a1c70)](https://www.youtube.com/watch?v=bljx0XSSEbo&pp=0gcJCY0JAYcqIYzv)
+
+_View the product's teaser_
+
+## See it in action (SPEED UP)
+[![demo](https://github.com/user-attachments/assets/8fa14664-9388-40f8-91f0-cbc045bded34)](https://www.youtube.com/watch?v=7VWpicF_zvc)
+
+_View the product's demo_
+
+
 ## Installation
 ### Components needed
 - Raspberry Pi Pico
