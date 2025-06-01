@@ -58,7 +58,7 @@ cd <your-path>
 3. Clone the repository
 ```
 
-git clone --recurse-submodules https://github.com/anhhuy-ux/Heartly-Project
+git clone --recurse-submodules https://github.com/anh-tq-huynh/Heartly-Project
 ```
 4. Go to the main repository of Heartly
 ```
